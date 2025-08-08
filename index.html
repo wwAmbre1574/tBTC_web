@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Sentio 數據彙整</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    h1 { color: #333; }
+    #status { margin-top: 1rem; font-size: 1.2rem; }
+    button { font-size: 1rem; padding: 0.5rem 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>📊 Sentio 數據彙整</h1>
+  <button onclick="downloadCSV()">取得最新 CSV</button>
+  <p id="status"></p>
+
+  <script>
+    const API_BASE = "https://your-railway-app.up.railway.app"; // ⛳ 替換成你的 Railway API 網址
+
+    async function downloadCSV() {
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = "⏳ 處理中...";
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+
+        const res = await fetch(API_BASE + "/export-sentio", {
+          method: "GET",
+          signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error("API 回傳錯誤：" + res.status);
+
+        const result = await res.json();
+
+        if (result.success) {
+          const a = document.createElement("a");
+          a.href = API_BASE + "/download-csv";
+          a.download = "tBTC_Created_Filtered.csv";
+          a.click();
+          statusEl.textContent = "✅ 已下載完成";
+        } else {
+          statusEl.textContent = "❌ 發生錯誤：" + result.error;
+        }
+
+      } catch (err) {
+        statusEl.textContent = "❌ 發生錯誤：" + (err.message || JSON.stringify(err));
+        console.error("Fetch error:", err);
+      }
+    }
+  </script>
+</body>
+</html>
